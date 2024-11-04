@@ -9,7 +9,7 @@ const LEDIntensityInput = ({ intensity, onChange }) => {
   return (
     <div className="mb-6">
       <label className="block text-gray-600 text-sm font-bold mb-2">LED Intensity</label>
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-4" onClick={(e) => e.stopPropagation()}>
         <input
           type="range"
           value={intensity}

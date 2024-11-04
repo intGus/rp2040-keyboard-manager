@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import KeycodeInput from './components/KeycodeInput';
 import LEDIntensityInput from './components/LEDIntensityInput';
 import SerialTerminal from './components/SerialTerminal';
@@ -14,7 +14,11 @@ const App = () => {
   const [fileHandle, setFileHandle] = useState(null);
   const [serialPort, setSerialPort] = useState(null);
   const [serialOutput, setSerialOutput] = useState('');
-  const [editingPin, setEditingPin] = useState(null); // Track the current pin being edited
+  const [editingPin, setEditingPin] = useState(null);
+  const [isStringMode, setIsStringMode] = useState({}); // Track string/array mode for each pin
+  const [tempStrings, setTempStrings] = useState({}); // Temporary storage for string values
+
+  const textAreaRefs = useRef({}); // Store references to textareas for focusing
 
   const loadConfig = async () => {
     try {
@@ -25,9 +29,25 @@ const App = () => {
       const contents = await file.text();
       const config = JSON.parse(contents);
 
+      const initialStringMode = {};
+      const initialTempStrings = {};
+
+      // Set initial state for string mode and temporary strings
+      for (const [pin, value] of Object.entries(config.button_pins)) {
+        if (typeof value === "object" && "string" in value) {
+          initialStringMode[pin] = true;
+          initialTempStrings[pin] = value.string;
+        } else {
+          initialStringMode[pin] = false;
+          initialTempStrings[pin] = ""; // Default empty if no string exists
+        }
+      }
+
       setKeycodes(config.button_pins);
       setIntensities(config.led_intensities || intensities);
       setFileHandle(handle);
+      setIsStringMode(initialStringMode);
+      setTempStrings(initialTempStrings);
 
       await startSerialRead();
     } catch (error) {
@@ -42,8 +62,16 @@ const App = () => {
       return;
     }
 
+    // Prepare config data with temporary strings in memory
     const configData = {
-      button_pins: keycodes,
+      button_pins: Object.fromEntries(
+        Object.entries(keycodes).map(([pin, value]) => [
+          pin,
+          isStringMode[pin]
+            ? { string: (tempStrings[pin] || "").replace(/\\n/g, "\n") } // Replace \\n with \n
+            : value,
+        ])
+      ),
       led_intensities: intensities,
     };
 
@@ -64,7 +92,7 @@ const App = () => {
     if (serialPort) {
       try {
         const writer = serialPort.writable.getWriter();
-        const resetSignal = new TextEncoder().encode("1");
+        const resetSignal = new TextEncoder().encode('\x04');
         await writer.write(resetSignal);
         writer.releaseLock();
 
@@ -102,42 +130,71 @@ const App = () => {
     }
   };
 
-  // Toggle editing mode for a specific pin
   const toggleEditing = (pin) => {
     setEditingPin(editingPin === pin ? null : pin);
   };
 
-  // Handle key presses to add or delete keycodes
   const handleKeyPress = (event) => {
-    if (!editingPin) return;
+    if (!editingPin || isStringMode[editingPin]) return;
 
-    const key = event.key === " " ? "SPACE" : event.key.toUpperCase();
+    // Handle special cases for certain keys
+    let key;
+    if (event.key === " ") {
+      key = "SPACE";
+    } else if (event.key === "Meta") {
+      key = "GUI";
+    } else {
+      key = event.key.toUpperCase();
+    }
 
     setKeycodes((prevKeycodes) => {
       const newKeycodes = { ...prevKeycodes };
 
-      // Check if the key is already in the array
+      // Ensure newKeycodes[editingPin] is an array before proceeding
+      if (!Array.isArray(newKeycodes[editingPin])) {
+        newKeycodes[editingPin] = []; // Initialize as an empty array if it's not already an array
+      }
+
       const index = newKeycodes[editingPin].indexOf(key);
 
       if (index > -1) {
-        // Remove the key if it already exists
         newKeycodes[editingPin] = newKeycodes[editingPin].filter((k) => k !== key);
       } else {
-        // Add the key if it doesn't exist
         newKeycodes[editingPin] = [...newKeycodes[editingPin], key];
       }
+
       return newKeycodes;
     });
   };
 
+
   useEffect(() => {
-    if (editingPin) {
+    if (editingPin && !isStringMode[editingPin]) {
       window.addEventListener("keydown", handleKeyPress);
     } else {
       window.removeEventListener("keydown", handleKeyPress);
     }
     return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [editingPin]);
+  }, [editingPin, isStringMode]);
+
+  const handleStringChange = (event, pin) => {
+    const newString = event.target.value;
+    setTempStrings((prev) => ({ ...prev, [pin]: newString }));
+  };
+
+  const toggleMode = (pin) => {
+    setIsStringMode((prev) => ({ ...prev, [pin]: !prev[pin] }));
+
+    // Enable editing only if it’s not already enabled for this pin
+    if (editingPin !== pin) {
+      toggleEditing(pin);
+    }
+
+    // Focus on the textarea if switching to string mode
+    if (!isStringMode[pin] && textAreaRefs.current[pin]) {
+      setTimeout(() => textAreaRefs.current[pin].focus(), 0);
+    }
+  };
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -157,8 +214,28 @@ const App = () => {
               }`}
           >
             <h3 className="text-lg font-semibold text-gray-800 mb-2">Pin: {pin}</h3>
+            <div className="flex items-center mb-2">
+              <label className="mr-2 text-sm text-gray-600">String Mode</label>
+              <input
+                type="checkbox"
+                checked={isStringMode[pin] || false}
+                onClick={(e) => e.stopPropagation()}
+                onChange={() => toggleMode(pin)}
+              />
+            </div>
             <div className="overflow-y-auto max-h-32 w-full px-2">
-              <KeycodeInput keycodes={keycodeArray} />
+              {isStringMode[pin] ? (
+                <textarea
+                  ref={(el) => (textAreaRefs.current[pin] = el)}
+                  value={tempStrings[pin] || ""}
+                  onChange={(e) => handleStringChange(e, pin)}
+                  disabled={editingPin !== pin}
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-full p-2 border rounded bg-gray-100"
+                />
+              ) : (
+                Array.isArray(keycodeArray) ? <KeycodeInput keycodes={keycodeArray} /> : null
+              )}
             </div>
             <LEDIntensityInput
               intensity={intensities[index]}
