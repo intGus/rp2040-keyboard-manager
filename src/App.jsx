@@ -197,7 +197,7 @@ const App = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6 bg-gray-50 min-h-screen light">
       <button
         onClick={loadConfig}
         className="mb-6 bg-green-500 text-white py-2 px-6 rounded hover:bg-green-600 transition duration-200"
