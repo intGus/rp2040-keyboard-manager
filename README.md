@@ -1,5 +1,7 @@
 # Keycode Configuration and Serial Communication App
 
+[Keyboard Manager](https://keyboard-manager.gusdiaz.dev/)
+
 A React-based application designed to configure and manage keycodes and LED intensities via JSON files. The app enables users to edit keycode mappings for multiple GPIO pins and adjust LED intensity values. It supports loading configurations from JSON files and saving updates back to the file system. Additionally, the app communicates with a serial device to reset and apply configurations.
 
 ## Features
