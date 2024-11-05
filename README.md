@@ -33,19 +33,18 @@ A React-based application designed to configure and manage keycodes and LED inte
 
 ## Usage
 
-1. **Load Configuration**:
-   - Click the **Load Config File** button to open a JSON file on the circuitpython board [(repository for the board)](https://github.com/intGus/rp2040-keyboard) containing pin mappings and LED intensities. The app parses this data to initialize the UI with current values.
+1. **Load Configuration and Connect to the Board**:
+   - Click the **Load Config File** button to open the `keyboard_config.json` file located in the root directory of the CircuitPython board. The board should appear as "CircuitPython" in your file explorer.
+   - After selecting the configuration file, the app will establish a serial connection with the board, which should appear as "Pico W" or "CircuitPython" in the list of available devices. This connection initializes the UI with the current values for pin mappings and LED intensities.
+   - Refer to the [repository for the board](https://github.com/intGus/rp2040-keyboard) for more details on configuration options and setup requirements.
 
 2. **Edit Keycodes and Intensities**:
    - **Keycodes**: Click on a pin to edit its keycodes. You can toggle between array mode (multiple keycodes) and string mode for each pin using the checkbox.
    - **String Mode**: Switch to string mode to enter a custom string, and click the checkbox again to return to keycode array mode.
    - **LED Intensities**: Adjust LED intensities using sliders.
 
-3. **Save Configuration**:
-   - Click **Save** to write changes back to the JSON file. This also sends a reset signal to the connected device via serial communication.
-
-4. **Reset Device**:
-   - Use the **Reset Board** button to send a reset command to the serial device manually.
+3. **Reset Device**:
+   - Use the **Reset Board** button to to write changes back to the JSON file and send a reset command to the serial device. Click "Save Changes" if prompted.
 
 ## File Structure
 
