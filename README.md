@@ -1,8 +1,71 @@
-# React + Vite
+# Keycode Configuration and Serial Communication App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React-based application designed to configure and manage keycodes and LED intensities via JSON files. The app enables users to edit keycode mappings for multiple GPIO pins and adjust LED intensity values. It supports loading configurations from JSON files and saving updates back to the file system. Additionally, the app communicates with a serial device to reset and apply configurations.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Configurable Keycodes and LED Intensities**: Allows users to load, edit, and save configurations for key mappings and LED intensities.
+- **String and Array Modes**: Supports both string and array formats for keycodes, with toggleable string mode for each pin.
+- **Serial Communication**: Sends a reset signal to a connected device to apply configuration changes.
+- **Interactive UI**: Provides a clear UI with editable fields, keyboard-based keycode inputs, and real-time validation.
+
+## Installation
+
+1. **Clone the repository**:
+    ```bash
+    git clone https://github.com/intGus/rp2040-keyboard-manager.git
+    ```
+
+2. **Navigate to the project directory**:
+    ```bash
+    cd rp2040-keyboard-manager
+    ```
+
+3. **Install dependencies**:
+    ```bash
+    npm install
+    ```
+
+4. **Start the application**:
+    ```bash
+    npm run dev
+    ```
+
+## Usage
+
+1. **Load Configuration**:
+   - Click the **Load Config File** button to open a JSON file on the circuitpython board [(repository for the board (https://github.com/intGus/rp2040-keyboard))] containing pin mappings and LED intensities. The app parses this data to initialize the UI with current values.
+
+2. **Edit Keycodes and Intensities**:
+   - **Keycodes**: Click on a pin to edit its keycodes. You can toggle between array mode (multiple keycodes) and string mode for each pin using the checkbox.
+   - **String Mode**: Switch to string mode to enter a custom string, and click the checkbox again to return to keycode array mode.
+   - **LED Intensities**: Adjust LED intensities using sliders.
+
+3. **Save Configuration**:
+   - Click **Save** to write changes back to the JSON file. This also sends a reset signal to the connected device via serial communication.
+
+4. **Reset Device**:
+   - Use the **Reset Board** button to send a reset command to the serial device manually.
+
+## File Structure
+
+- **App Component**: Main application logic for loading, saving, and managing keycodes and intensities.
+- **Components**:
+  - **KeycodeInput**: Handles keycode array inputs.
+  - **LEDIntensityInput**: Provides an adjustable slider for LED intensities.
+  - **SerialTerminal**: Displays serial output.
+
+## Configuration Format
+
+The JSON configuration file should follow this structure:
+
+```json
+{
+  "button_pins": {
+    "GP1": ["E"],
+    "GP2": ["R"],
+    "GP14": { "string": "this is a test\n" },
+    "GP15": ["R"]
+  },
+  "led_intensities": [25, 50, 75, 100]
+}
