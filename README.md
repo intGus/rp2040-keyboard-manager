@@ -34,7 +34,7 @@ A React-based application designed to configure and manage keycodes and LED inte
 ## Usage
 
 1. **Load Configuration**:
-   - Click the **Load Config File** button to open a JSON file on the circuitpython board [(repository for the board (https://github.com/intGus/rp2040-keyboard))] containing pin mappings and LED intensities. The app parses this data to initialize the UI with current values.
+   - Click the **Load Config File** button to open a JSON file on the circuitpython board [(repository for the board)](https://github.com/intGus/rp2040-keyboard) containing pin mappings and LED intensities. The app parses this data to initialize the UI with current values.
 
 2. **Edit Keycodes and Intensities**:
    - **Keycodes**: Click on a pin to edit its keycodes. You can toggle between array mode (multiple keycodes) and string mode for each pin using the checkbox.
